@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	 xmlns:aop="http://www.springframework.org/schema/aop"
+  	xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd http://www.springframework.org/schema/tx
+         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+         http://www.springframework.org/schema/aop 
+         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+        
+    <bean id="placeholderConfig"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:config.properties</value>
+				<value>classpath:jdbc.properties</value>
+				<!-- <value>classpath:log4j.properties</value> -->
+			</list>
+		</property>
+	</bean> 
+         
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<!-- C3P0连接池配置解决MySQL连接的空闲时间超过8小时后自动断开连接的问题  -->
+		<property name="preferredTestQuery" value="select 1"></property>
+		
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl" value="jdbc:mysql://${ip.wdk}:3306/${dbname.wdk}?user=${username.wdk}&amp;password=${password.wdk}&amp;useUnicode=true&amp;characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull" />
+		<property name="user" value="${username.wdk}" />
+		<property name="password" value="${password.wdk}" />
+		
+		<property name="maxPoolSize" value="30" />
+		<property name="minPoolSize" value="10" />
+		<!-- 关闭连接后不自动commit -->
+		<property name="autoCommitOnClose" value="false" />
+		<!-- 获取连接超时时间 -->
+		<property name="checkoutTimeout" value="1000" />
+		<!-- 获取连接失败重试次数 -->
+		<property name="acquireRetryAttempts" value="2" />
+		<property name="initialPoolSize" value="1" />
+		<property name="maxIdleTime" value="25000" />
+		<property name="acquireIncrement" value="5" />
+		<property name="maxIdleTimeExcessConnections" value="1800" />
+		<property name="maxStatements" value="0" />
+		<property name="maxStatementsPerConnection" value="0" />
+	</bean>
+	
+  	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="configLocation" value="classpath:mybatis-config.xml" />
+        <property name="mapperLocations" value="classpath*:/com/wei/category/dao/*.xml"></property>
+    </bean>
+    
+    <!-- 自动扫描dao接口，动态用xml实现dao，并注入spring中 -->
+  	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+  		<!-- 后处理的方式(防止提前初始化，jdbc未加载进来) -->
+    	<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+    	<!-- 扫描dao接口包路径 -->
+    	<property name="basePackage" value="com.wei.category.dao" />
+    </bean>
+    
+</beans>         

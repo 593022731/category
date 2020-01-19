@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.wei.category.dao.CategoryDao">
+
+	<select id="getAllCategorys" resultType="com.wei.category.entity.Category" >
+		select * from ${tableName} order by orderNo asc
+	</select> 
+
+	<select id="getCategoryDTO" resultType="com.wei.category.entity.CategoryDTO" >
+		select * from ${tableName} order by orderNo asc
+	</select> 
+	
+	<select id="getMaxId" resultType="Integer" >
+		select max(id) from ${tableName}
+	</select> 
+	
+	<insert id="insertBatch" parameterType="java.util.Map">
+		INSERT INTO ${tableName} (
+			code,
+			parent_code,
+			title,
+			level,
+			id,
+			flag,
+			orderNo,
+			source_version,
+			old_code
+		) values
+		<foreach collection="categories" item="item" index="index" separator="," >  
+       		(
+       		#{item.code},
+       		#{item.parentCode},
+       		#{item.title},
+       		#{item.level},
+       		#{item.id},
+       		#{item.flag},
+       		#{item.orderNo},
+       		#{item.sourceVersion},
+       		#{item.oldCode}
+       		)
+    	</foreach>
+	</insert>
+	
+	<update id="createNewTable">
+		CREATE TABLE ${tableName} (
+		  `code` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL COMMENT '主键,分类唯一标示,存储path',
+		  `parent_code` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '父级分类',
+		  `title` VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '名称',
+		  `orderNo` INT(11) NOT NULL DEFAULT '0' COMMENT '排序字段',
+		  `level` INT(11) NOT NULL DEFAULT '0' COMMENT '节点深度(索引从0开始)',
+		  `id` INT(11) NOT NULL DEFAULT '0' COMMENT '节点命名',
+		  `flag` TINYINT(4) NOT NULL DEFAULT '0' COMMENT '0:正常节点，1：扩展属性，只读标签',
+		  `old_code` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '冗余字段，上一版本的code，如果此节点没更新，等于code字段',
+		  `source_version` VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT '冗余字段，上一个版本',
+		  `createDT` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		  PRIMARY KEY (`code`)
+		) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT=${tableComment}
+	</update>
+	
+	<select id="getAllCategoryTable" resultType="com.wei.category.entity.CategoryTable" >
+		select * from category_table order by createDT desc
+	</select> 
+	
+	<insert id="saveCategoryTable">
+		insert into category_table(tableName,tableComment) values(#{tableName},#{tableComment})
+	</insert>
+	
+	<select id="getDifCategory" resultType="com.wei.category.entity.Category" >
+		select * from ${sourceVersion} WHERE CODE NOT IN (SELECT CODE FROM ${compareVersion})
+	</select>
+	
+	<select id="getUseCategoryTable" resultType="String" >
+		select tableName from category_table where isUse = 1
+	</select>  
+	
+	<update id="updateUse">
+		update category_table set isUse = 0
+	</update>
+	
+	<update id="updateUseByTableName">
+		update category_table set isUse = 1 where tableName = #{tableName}
+	</update>
+	
+</mapper>  
+  
