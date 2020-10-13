@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.13.1</version>
 		</dependency>
 
 		<!-- slf4j是接口规范，logback是实现 -->
